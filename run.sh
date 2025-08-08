@@ -3,7 +3,7 @@
 # Hentikan eksekusi jika ada error
 set -e
 
-APP_NAME="myapp"
+APP_NAME="myapp.exe"
 PORT=8000
 
 echo "[1/4] 🧹 Membersihkan binary lama..."
