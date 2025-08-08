@@ -1,0 +1,67 @@
+package main
+
+import (
+	"backend/config"
+	"backend/middleware"
+	"backend/model"
+	"log"
+	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+)
+
+var db *sqlx.DB
+
+// ================== CONFIG ==================
+
+// Middleware tetap bisa dipindah ke file terpisah jika diinginkan
+
+// ================== MIDDLEWARE ==================
+func middlewareLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("[HIT] %s %s %s", r.Method, r.URL.Path, r.RemoteAddr)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func middlewareCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		w.Header().Set("Vary", "Origin")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// ================== MAIN ==================
+func main() {
+	db = config.InitDB()
+	defer db.Close()
+	model.SetDB(db)
+
+	r := NewRouter()
+
+	r.Use(middlewareLogger)
+	r.Use(middlewareCORS)
+
+	// Subrouter untuk endpoint user (protected)
+	userRouter := r.PathPrefix("/orders").Subrouter()
+	userRouter.Use(middleware.AuthMiddleware)
+	userRouter.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`[{"id":1,"item":"Order Contoh"}]`))
+	}).Methods("GET")
+
+	log.Println("Server running on :8000")
+	log.Fatal(http.ListenAndServe(":8000", r))
+}
