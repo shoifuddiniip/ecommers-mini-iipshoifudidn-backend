@@ -23,9 +23,6 @@ type CartRequest struct {
 	Items  []CartItem `json:"items"`
 }
 
-// Dummy in-memory cart (for demo, replace with DB in production)
-var userCarts = make(map[string][]CartItem)
-
 func GetCart(w http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("userId")
 	if userId == "" {
