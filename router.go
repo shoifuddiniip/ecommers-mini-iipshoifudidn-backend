@@ -16,6 +16,8 @@ func NewRouter() *mux.Router {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`[{"id":1,"item":"Order Contoh"}]`))
 	}).Methods("GET")
+	// Endpoint download file
+	r.HandleFunc("/files/{filename:.*}", controller.DownloadFile).Methods(http.MethodGet)
 
 	return r
 }
