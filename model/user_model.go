@@ -13,6 +13,8 @@ var db *sqlx.DB
 
 type Claims struct {
 	Username string `json:"username"`
+	Fullname string `json:"fullname"`
+
 	jwt.StandardClaims
 }
 
@@ -36,9 +38,16 @@ func ValidateUser(username, password string) bool {
 }
 
 func GenerateJWT(username string, secret string) (string, error) {
+	// Ambil fullname dari database
+	var fullname string
+	err := db.Get(&fullname, "SELECT fullname FROM users WHERE username=?", username)
+	if err != nil {
+		fullname = ""
+	}
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		Username: username,
+		Fullname: fullname,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

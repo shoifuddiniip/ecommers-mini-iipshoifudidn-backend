@@ -1,10 +1,17 @@
 package controller
 
 import (
+	"backend/model"
+	"encoding/json"
 	"net/http"
 )
 
 func GetProducts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`[{"id":1,"name":"Produk Contoh","price":10000}]`))
+	products, err := model.GetAllProducts()
+	if err != nil {
+		http.Error(w, "Gagal mengambil data produk", http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(products)
 }
