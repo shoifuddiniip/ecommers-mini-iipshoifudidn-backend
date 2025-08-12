@@ -18,6 +18,9 @@ func NewRouter() *mux.Router {
 	}).Methods("GET")
 	// Endpoint download file
 	r.HandleFunc("/files/{filename:.*}", controller.DownloadFile).Methods(http.MethodGet)
+	// Endpoint cart
+	r.HandleFunc("/cart", controller.GetCart).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/cart", controller.UpdateCart).Methods(http.MethodPut, http.MethodOptions)
 
 	return r
 }

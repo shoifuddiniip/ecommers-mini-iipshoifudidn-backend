@@ -20,6 +20,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Ambil user id dan fullname dari database
+	var userId int
+	var fullname string
+	err := model.GetUserIdAndFullname(username, &userId, &fullname)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	secret := config.GetJWTSecret()
 	token, err := model.GenerateJWT(username, secret)
 	if err != nil {
@@ -28,5 +37,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"token":    token,
+		"username": username,
+		"fullname": fullname,
+		"userId":   userId,
+	})
 }

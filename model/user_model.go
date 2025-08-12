@@ -9,6 +9,11 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// GetUserIdAndFullname mengambil id dan fullname user dari database berdasarkan username
+func GetUserIdAndFullname(username string, userId *int, fullname *string) error {
+	return db.QueryRowx("SELECT id, fullname FROM users WHERE username=?", username).Scan(userId, fullname)
+}
+
 var db *sqlx.DB
 
 type Claims struct {
