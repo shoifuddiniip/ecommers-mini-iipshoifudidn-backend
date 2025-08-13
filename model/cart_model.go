@@ -24,14 +24,14 @@ type Cart struct {
 // Get cart by user id
 func GetCartByUserID(userID int) ([]CartItem, error) {
 	var cartID int
-	err := db.Get(&cartID, "SELECT id FROM carts WHERE user_id=?", userID)
+	err := db.Get(&cartID, "SELECT id FROM carts WHERE user_id=? AND deleted_at IS NULL", userID)
 	if err == sql.ErrNoRows {
 		return []CartItem{}, nil
 	} else if err != nil {
 		return nil, err
 	}
 	var items []CartItem
-	err = db.Select(&items, "SELECT id, product_id, name, price, image, size, color, qty FROM cart_items WHERE cart_id=?", cartID)
+	err = db.Select(&items, "SELECT id, product_id, name, price, image, size, color, qty FROM cart_items WHERE cart_id=? AND deleted_at IS NULL", cartID)
 	return items, err
 }
 
@@ -43,7 +43,7 @@ func UpdateCartForUser(userID int, items []CartItem) error {
 	}
 	defer tx.Rollback()
 	var cartID int
-	err = tx.Get(&cartID, "SELECT id FROM carts WHERE user_id=?", userID)
+	err = tx.Get(&cartID, "SELECT id FROM carts WHERE user_id=? AND deleted_at IS NULL", userID)
 	if err == sql.ErrNoRows {
 		res, err := tx.Exec("INSERT INTO carts (user_id) VALUES (?)", userID)
 		if err != nil {
@@ -54,7 +54,7 @@ func UpdateCartForUser(userID int, items []CartItem) error {
 	} else if err != nil {
 		return err
 	}
-	_, err = tx.Exec("DELETE FROM cart_items WHERE cart_id=?", cartID)
+	_, err = tx.Exec("UPDATE cart_items SET deleted_at=NOW() WHERE cart_id=? AND deleted_at IS NULL", cartID)
 	if err != nil {
 		return err
 	}

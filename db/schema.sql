@@ -1,3 +1,6 @@
+-- Soft delete support
+ALTER TABLE carts ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL;
+ALTER TABLE cart_items ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL;
 
 CREATE DATABASE IF NOT EXISTS ecommerce;
 USE ecommerce;
@@ -44,18 +47,30 @@ CREATE TABLE IF NOT EXISTS products (
 ALTER TABLE products ADD COLUMN stock INT NOT NULL DEFAULT 0;
 ALTER TABLE products ADD COLUMN category VARCHAR(50) NOT NULL DEFAULT '';
 
+
 CREATE TABLE IF NOT EXISTS orders (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id VARCHAR(32) PRIMARY KEY,
     user_id INT,
+    subtotal FLOAT,
+    discount FLOAT,
+    delivery_fee FLOAT,
+    total FLOAT,
+    promo_code VARCHAR(32),
+    status VARCHAR(16) DEFAULT 'pending',
+    payment_code VARCHAR(32),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 CREATE TABLE IF NOT EXISTS order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT,
+    order_id VARCHAR(32),
     product_id INT,
-    quantity INT NOT NULL,
-    FOREIGN KEY (order_id) REFERENCES orders(id),
+    name VARCHAR(128),
+    qty INT NOT NULL,
+    price FLOAT,
+    size VARCHAR(16),
+    color VARCHAR(32),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
     FOREIGN KEY (product_id) REFERENCES products(id)
 );

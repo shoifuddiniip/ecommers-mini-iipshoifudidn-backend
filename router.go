@@ -16,6 +16,9 @@ func NewRouter() *mux.Router {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`[{"id":1,"item":"Order Contoh"}]`))
 	}).Methods("GET")
+	r.HandleFunc("/orders", controller.CreateOrder).Methods(http.MethodPost, http.MethodOptions)
+	r.HandleFunc("/orders/{orderId}", controller.GetOrder).Methods(http.MethodGet, http.MethodOptions)
+	r.HandleFunc("/payments/confirm", controller.ConfirmPayment).Methods(http.MethodPost, http.MethodOptions)
 	// Endpoint download file
 	r.HandleFunc("/files/{filename:.*}", controller.DownloadFile).Methods(http.MethodGet)
 	// Endpoint cart (DB)
