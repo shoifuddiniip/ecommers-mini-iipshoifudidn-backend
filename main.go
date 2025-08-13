@@ -6,9 +6,11 @@ import (
 	"backend/model"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 )
 
 var db *sqlx.DB
@@ -45,6 +47,16 @@ func middlewareCORS(next http.Handler) http.Handler {
 
 // ================== MAIN ==================
 func main() {
+	_ = godotenv.Load(".env")
+	backendPort := os.Getenv("BACKEND_PORT")
+	if backendPort == "" {
+		backendPort = "8000"
+	}
+	frontendPort := os.Getenv("FRONTEND_PORT")
+	if frontendPort == "" {
+		frontendPort = "3000"
+	}
+
 	db = config.InitDB()
 	defer db.Close()
 	model.SetDB(db)
@@ -62,6 +74,15 @@ func main() {
 		w.Write([]byte(`[{"id":1,"item":"Order Contoh"}]`))
 	}).Methods("GET")
 
-	log.Println("Server running on :8000")
-	log.Fatal(http.ListenAndServe(":8000", r))
+	// Jalankan backend di port dari env
+	go func() {
+		log.Printf("Backend server running on :%s", backendPort)
+		log.Fatal(http.ListenAndServe(":"+backendPort, r))
+	}()
+
+	// Jalankan static file server untuk frontend di port dari env
+	fs := http.FileServer(http.Dir("frontend"))
+	http.Handle("/", fs)
+	log.Printf("Frontend static server running on :%s (folder ./frontend)", frontendPort)
+	log.Fatal(http.ListenAndServe(":"+frontendPort, nil))
 }
