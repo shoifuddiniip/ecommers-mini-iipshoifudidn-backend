@@ -12,12 +12,9 @@ func NewRouter() *mux.Router {
 
 	r.HandleFunc("/products", controller.GetProducts).Methods(http.MethodGet, http.MethodOptions)
 	r.HandleFunc("/login", controller.Login).Methods(http.MethodPost, http.MethodOptions)
-	r.HandleFunc("/orders", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`[{"id":1,"item":"Order Contoh"}]`))
-	}).Methods("GET")
+	r.HandleFunc("/orders", controller.GetOrdersByUser).Methods(http.MethodGet, http.MethodOptions)
 	r.HandleFunc("/orders", controller.CreateOrder).Methods(http.MethodPost, http.MethodOptions)
-	r.HandleFunc("/orders/{orderId}", controller.GetOrder).Methods(http.MethodGet, http.MethodOptions)
+	// r.HandleFunc("/orders/{orderId}", controller.GetOrder).Methods(http.MethodGet, http.MethodOptions) // Not implemented
 	r.HandleFunc("/payments/confirm", controller.ConfirmPayment).Methods(http.MethodPost, http.MethodOptions)
 	// Endpoint download file
 	r.HandleFunc("/files/{filename:.*}", controller.DownloadFile).Methods(http.MethodGet)

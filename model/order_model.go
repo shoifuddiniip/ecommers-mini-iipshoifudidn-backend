@@ -6,6 +6,62 @@ import (
 	"time"
 )
 
+func GetOrdersByUser(userId string) ([]OrderListItem, error) {
+	var orders []OrderListItem
+	err := db.Select(&orders, `SELECT order_id, created_at, status as payment_status, payment_code, subtotal, discount, delivery_fee, promo_code, total FROM orders WHERE user_id = ? ORDER BY created_at DESC`, userId)
+	if err != nil {
+		return nil, err
+	}
+	for i := range orders {
+		var items []OrderListProduct
+		err := db.Select(&items, `SELECT name, qty, price FROM order_items WHERE order_id = ?`, orders[i].OrderID)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
+		orders[i].Items = items
+	}
+	return orders, nil
+}
+
+// Untuk response GET /orders (list)
+type OrderListItem struct {
+	OrderID       string             `json:"orderId" db:"order_id"`
+	CreatedAt     string             `json:"created_at" db:"created_at"`
+	PaymentStatus string             `json:"payment_status" db:"payment_status"`
+	PaymentCode   string             `json:"paymentCode" db:"payment_code"`
+	Subtotal      float32            `json:"subtotal" db:"subtotal"`
+	Discount      float32            `json:"discount" db:"discount"`
+	DeliveryFee   float32            `json:"deliveryFee" db:"delivery_fee"`
+	PromoCode     *string            `json:"promoCode" db:"promo_code"`
+	Total         float32            `json:"total" db:"total"`
+	Items         []OrderListProduct `json:"items"`
+}
+
+type OrderListProduct struct {
+	Name  string  `json:"name" db:"name"`
+	Qty   int     `json:"qty" db:"qty"`
+	Price float32 `json:"price" db:"price"`
+}
+
+func GetOrders() ([]OrderListItem, error) {
+	// Ambil semua order
+	var orders []OrderListItem
+	err := db.Select(&orders, `SELECT order_id, created_at, status as payment_status, payment_code, subtotal, discount, delivery_fee, promo_code, total FROM orders ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	// Ambil items untuk setiap order
+	for i := range orders {
+		var items []OrderListProduct
+		err := db.Select(&items, `SELECT name, qty, price FROM order_items WHERE order_id = ?`, orders[i].OrderID)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, err
+		}
+		orders[i].Items = items
+	}
+	return orders, nil
+}
+
 // OrderRequest didefinisikan di model agar tidak circular import
 type OrderRequest struct {
 	UserID      string      `json:"userId"`

@@ -59,15 +59,20 @@ func CreateOrder(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-func GetOrder(w http.ResponseWriter, r *http.Request) {
-	orderId := r.URL.Path[len("/orders/"):]
-	order, err := model.GetOrder(orderId)
+// GET /orders?userId=xxx
+func GetOrdersByUser(w http.ResponseWriter, r *http.Request) {
+	userId := r.URL.Query().Get("userId")
+	if userId == "" {
+		http.Error(w, "userId required", http.StatusBadRequest)
+		return
+	}
+	orders, err := model.GetOrdersByUser(userId)
 	if err != nil {
-		http.Error(w, "Order not found", http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(order)
+	json.NewEncoder(w).Encode(orders)
 }
 
 func ConfirmPayment(w http.ResponseWriter, r *http.Request) {
